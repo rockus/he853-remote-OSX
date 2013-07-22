@@ -3,27 +3,41 @@
 
 /* Timings
 
-FName StartBit_HTime StartBit_LTime EndBit_HTime EndBit_LTime DataBit0_HTime DataBit0_LTime 
-AnBan  320            4800           0            0            320            960           
-UK     320            9700           0            0            320            960           
-GER    260            8600           0            0            260            260           
+FName StartBit_HTime StartBit_LTime EndBit_HTime EndBit_LTime DataBit0_HTime DataBit0_LTime
+AnBan  320            4800           0            0            320            960
+UK     320            9700           0            0            320            960
+GER    260            8600           0            0            260            260
 
 
 FName  DataBit1_HTime DataBit1_LTime DataBit_Count Frame_Count Remark
-AnBan  960            320            28            7           (建议6Frame)康泰3合1无线协议标准V1.2
-UK     960            320            24            18          (建议16Frame)
-GER    260            1300           57            7           (建议6Frame)
+AnBan  960            320            28            7           (??6Frame)??3?1??????V1.2
+UK     960            320            24            18          (??16Frame)
+GER    260            1300           57            7           (??6Frame)
 
 */
 #include <stdio.h>
 #include <wchar.h>
-#include <string.h> 
+#include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include "hidapi.h" // http://www.signal11.us/oss/hidapi/
 
 #define RUN_DRY 0
 #define DEBUG   0
+
+struct He853Timings {
+	char* 		ProtocolName; // static char just to display
+	uint16_t	StartBitHighTime;
+	uint16_t	StartBitLowTime;
+	uint16_t	EndBitHighTime;
+	uint16_t	EndBitLowTime;
+	uint16_t	DataBit0HighTime;
+	uint16_t	DataBit0LowTime;
+	uint16_t	DataBit1HighTime;
+	uint16_t	DataBit1LowTime;
+	uint8_t		DataBitCount;
+	uint8_t		FrameCount;
+}
 
 class HE853Controller {
 private:
@@ -36,8 +50,10 @@ public:
 	~HE853Controller();
 
 private:
+	bool sendOutputReports(uint8_t* buf, uint16_t nReports);
 	bool sendOutputReport(uint8_t* buf);
 	bool readDeviceStatus();
+	bool sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBytes);
 	bool sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd);
 	bool sendRfData_GER(uint16_t deviceCode, bool cmd);
 	bool sendRfData_UK(uint16_t deviceCode, bool cmd);
@@ -51,5 +67,5 @@ public:
 	bool sendAll(uint16_t deviceId, uint8_t command);
 };
 
-#endif 
+#endif
 

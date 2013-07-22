@@ -43,6 +43,17 @@ bool HE853Controller::sendOutputReport(uint8_t* buf)
 #endif
 }
 
+bool HE853Controller::sendOutputReports(uint8_t* buf, uint16_t nReports)
+{
+		int rv;
+
+		for (uint16_t i=0; i <  nReports; i++) {
+			rv = hid_write(handle, buf + i * 9, 9);
+		}
+		return (bool) rv;
+}
+
+
 bool HE853Controller::readDeviceStatus()
 {
 	uint8_t buf[8];
@@ -58,6 +69,81 @@ bool HE853Controller::readDeviceStatus()
 #endif
 }
 
+#define MicroToTicks(x) (uint8_t) (((x) / 10) & 0xFF)
+#define MicroToTicksMSB(x) (uint8_t) ((((x) / 10) >> 8) & 0xFF)
+#define MicroToTicksLSB(x) (uint8_t) (((x) / 10) & 0xFF)
+bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBytes) {
+	uint8_t rfCmdBuf[32 + 4]; // rename to output report
+	uint8_t i = 0;
+
+	rfCmdBuf[0*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[0*8+1+0] = 0x01; // index
+		// StartBit_HTime
+		rfCmdBuf[0*8+1+1] = MicroToTicksMSB(t->StartBitHighTime);
+		rfCmdBuf[0*8+1+2] = MicroToTicksLSB(t->StartBitHighTime);
+		// StartBit_LTime
+		rfCmdBuf[0*8+1+3] = MicroToTicksMSB(t->StartBitLowTime);
+		rfCmdBuf[0*8+1+4] = MicroToTicksLSB(t->StartBitLowTime);
+		// EndBit_HTime
+		rfCmdBuf[0*8+1+5] = MicroToTicksMSB(t->EndBitHighTime);
+		rfCmdBuf[0*8+1+6] = MicroToTicksLSB(t->EndBitHighTime);
+		// EndBit_LTime
+		rfCmdBuf[0*8+1+7] = MicroToTicksMSB(t->EndBitLowTime);
+
+	rfCmdBuf[1*8+0 + 0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[1*8+1 + 0] = 0x2; // index
+
+		// EndBit_LTime
+		rfCmdBuf[1*8+1+1] = MicroToTicksLSB(t->EndBitLowTime);
+		// DataBit0_HTime
+		rfCmdBuf[1*8+1+2] = MicroToTicks(t->DataBit0HighTime);
+		// DataBit0_LTime
+		rfCmdBuf[1*8+1+3] = MicroToTicks(t->DataBit0LowTime);
+		// DataBit1_HTime
+		rfCmdBuf[1*8+1+4] = MicroToTicks(t->DataBit1HighTime);
+		// DataBit1_LTime
+		rfCmdBuf[1*8+1+5] = MicroToTicks(t->DataBit1LowTime);
+		// DataBit_Count
+		rfCmdBuf[1*8+1+6] = t->DataBitCount;
+		// Frame_Count
+		rfCmdBuf[1*8+1+7] = t->FrameCount;
+
+	rfCmdBuf[2*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[2*8+1+0] = 0x03;
+
+	for (; i< nDataBytes && i < 7; i++) {
+		rfCmdBuf[2*8+1+1 + i] = data[i];
+	}
+
+	if (i >= nDataBytes) {
+		for (; i < 7; i++) {
+			rfCmdBuf[2*8+1+1 + i] = 0x00;
+		}
+	}
+	rfCmdBuf[3*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[3*8+1+0] = 0x04;
+
+	for (i< nDataBytes && i < 7+7; i++) {
+		rfCmdBuf[3*8+1+1 + i-7] = data[i];
+	}
+
+	for (i < 7+7; i++) {
+		rfCmdBuf[3*8+1+1 + i-7] = 0x00;
+	}
+	return sendOutputReports(rfCmdBuf, 4);
+}
+
+static He853Timings {
+	"AnBan",
+	320, 4800,
+	0, 0,
+	320, 960
+	960, 320
+	28,
+	7
+} AnBanTimings;
+
+
 bool HE853Controller::sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd)
 {
 	uint8_t rfCmdBuf[32];
@@ -66,7 +152,7 @@ bool HE853Controller::sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd)
 				   0x00a, 0x200, 0xc02, 0x40c,
 				   0xe04, 0x70e, 0x507, 0x105,
 				   0xf01, 0xb0f, 0xd0b, 0x90d };
-	
+
 	uint8_t gbuf[7];
 	uint8_t kbuf[7];
 	uint8_t cbuf[7];
@@ -105,7 +191,7 @@ bool HE853Controller::sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd)
 	idx = gbuf[5] ^ kbuf[4];
 	kbuf[5] = (uint8_t) (tb_fx[idx] >> 8);
 	kbuf[6] = (uint8_t) gbuf[6];
-    
+
 	idx = kbuf[0];
 	cbuf[0] = (uint8_t) tb_fx[idx];
 	idx = kbuf[1] ^ cbuf[0];
@@ -124,7 +210,7 @@ bool HE853Controller::sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd)
 	       (cbuf[4] << 0x10) | (cbuf[3] << 0x0c) |
 	       (cbuf[2] << 0x08) | (cbuf[1] << 0x04) | cbuf[0];
 	temp = (temp >> 2) | ((temp & 3) << 0x1a);
-	
+
 	rfCmdBuf[0*8+0] = 0x01;
 	// StartBit_HTime
 	rfCmdBuf[0*8+1] = (uint8_t) ((320 / 10) >> 8);
@@ -188,13 +274,13 @@ bool HE853Controller::sendRfData_GER(uint16_t deviceCode, bool cmd)
 			      0x06, 0x09, 0x0a, 0x0c };
 
 	uint8_t buf[4] = { 0x00,
-			(uint8_t) ((deviceCode >> 8) & 0xff), 
-			(uint8_t) (deviceCode & 0xff), 
+			(uint8_t) ((deviceCode >> 8) & 0xff),
+			(uint8_t) (deviceCode & 0xff),
 						0x00 };
 
 	if (cmd == true)
 		buf[3] |= 0x10;
-	
+
 	uint8_t gbuf[8] = { (uint8_t) (buf[0] >> 4),
  			    (uint8_t) (buf[0] & 15),
 			    (uint8_t) (buf[1] >> 4),
@@ -238,7 +324,7 @@ bool HE853Controller::sendRfData_GER(uint16_t deviceCode, bool cmd)
 	rfCmdBuf[1*8+3] = (uint8_t) (260 / 10);
 	// DataBit1_HTime
 	rfCmdBuf[1*8+4] = (uint8_t) (260 / 10);
-	// DataBit1_LTimeur	
+	// DataBit1_LTimeur
 	rfCmdBuf[1*8+5] = (uint8_t) (1300 / 10);
 	// DataBit_Count
 	rfCmdBuf[1*8+6] = (uint8_t) 57;
@@ -290,12 +376,12 @@ bool HE853Controller::sendRfData_UK(uint16_t deviceCode, bool cmd)
 		                break;
 		}
 	}
-    
+
 	uint16_t addr = 0;
 	for (i = 7; i >= 0; i--) {
 		addr = (uint16_t) ((addr << 2) | buf[i]);
 	}
-    
+
 	uint8_t sbuf = 0x14;
 	if (cmd == true)
 		sbuf |= 0x01;
@@ -337,7 +423,7 @@ bool HE853Controller::sendRfData_UK(uint16_t deviceCode, bool cmd)
 	rfCmdBuf[2*8+5] = 0x00;
 	rfCmdBuf[2*8+6] = 0x00;
 	rfCmdBuf[2*8+7] = 0x00;
-	
+
 	rfCmdBuf[3*8+0] = 0x04;
 	rfCmdBuf[3*8+1] = 0x00;
 	rfCmdBuf[3*8+2] = 0x00;
