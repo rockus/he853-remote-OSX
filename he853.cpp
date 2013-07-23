@@ -123,25 +123,25 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 	rfCmdBuf[3*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
 	rfCmdBuf[3*8+1+0] = 0x04;
 
-	for (i< nDataBytes && i < 7+7; i++) {
+	for (;i< nDataBytes && i < 7+7; i++) {
 		rfCmdBuf[3*8+1+1 + i-7] = data[i];
 	}
 
-	for (i < 7+7; i++) {
+	for (;i < 7+7; i++) {
 		rfCmdBuf[3*8+1+1 + i-7] = 0x00;
 	}
 	return sendOutputReports(rfCmdBuf, 4);
 }
 
-static He853Timings {
+static struct He853Timings AnBanTimings = {
 	"AnBan",
 	320, 4800,
 	0, 0,
-	320, 960
-	960, 320
+	320, 960,
+	960, 320,
 	28,
 	7
-} AnBanTimings;
+} ;
 
 
 bool HE853Controller::sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd)

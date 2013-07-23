@@ -37,7 +37,7 @@ struct He853Timings {
 	uint16_t	DataBit1LowTime;
 	uint8_t		DataBitCount;
 	uint8_t		FrameCount;
-}
+};
 
 class HE853Controller {
 private:
