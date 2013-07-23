@@ -73,8 +73,10 @@ bool HE853Controller::readDeviceStatus()
 #define MicroToTicksMSB(x) (uint8_t) ((((x) / 10) >> 8) & 0xFF)
 #define MicroToTicksLSB(x) (uint8_t) (((x) / 10) & 0xFF)
 bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBytes) {
-	uint8_t rfCmdBuf[32 + 4]; // rename to output report
+	uint8_t rfCmdBuf[32 + 4 + 9]; // rename to output report cmdbuf + execute
 	uint8_t i = 0;
+
+	memset(rfCmdBuf, 0x00, sizeof(rfCmdBuf));
 
 	rfCmdBuf[0*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
 	rfCmdBuf[0*8+1+0] = 0x01; // index
@@ -110,27 +112,37 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 
 	rfCmdBuf[2*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
 	rfCmdBuf[2*8+1+0] = 0x03;
-
+#ifdef DEBUG
+	printf("Protocol %s dataBytes %d %d\n", t->ProtocolName, nDataBytes, t->DataBitCount);
+#endif
 	for (; i< nDataBytes && i < 7; i++) {
+#ifdef DEBUG
+		printf("%02X ", data[i]);
+#endif
 		rfCmdBuf[2*8+1+1 + i] = data[i];
 	}
 
-	if (i >= nDataBytes) {
-		for (; i < 7; i++) {
-			rfCmdBuf[2*8+1+1 + i] = 0x00;
-		}
-	}
 	rfCmdBuf[3*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
 	rfCmdBuf[3*8+1+0] = 0x04;
 
+#ifdef DEBUG
+		printf("\n");
+#endif
 	for (;i< nDataBytes && i < 7+7; i++) {
+#ifdef DEBUG
+		printf("%02X ", data[i]);
+#endif
 		rfCmdBuf[3*8+1+1 + i-7] = data[i];
 	}
 
-	for (;i < 7+7; i++) {
-		rfCmdBuf[3*8+1+1 + i-7] = 0x00;
-	}
-	return sendOutputReports(rfCmdBuf, 4);
+	rfCmdBuf[4*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[4*8+1+0] = 0x05; // Exec 'command'
+
+#ifdef DEBUG
+	printf("\nsendToStick\n");
+#endif
+
+	return sendOutputReports(rfCmdBuf, 5);
 }
 
 static struct He853Timings AnBanTimings = {
@@ -142,6 +154,37 @@ static struct He853Timings AnBanTimings = {
 	28,
 	7
 } ;
+
+static struct He853Timings UKTimings = {
+	"UK"
+	320, 9700,
+	0,0,
+	320, 960,
+	960, 320,
+	24,
+	18
+};
+
+static struct He853Timings GERTimings = {
+	"GER"
+	260, 8600,
+	0, 0,
+	260, 260
+	260, 1300
+	57,
+	7
+};
+
+#define KAKU_T            350  // us
+static struct He853Timings KakuTimings = {
+	"KAKU"
+	KAKU_T, 31* KAKU_T,
+	0,0,
+	3*KAKU_T, KAKU_T,
+	KAKU_T, 3*KAKU_T,
+	24,
+	18
+};
 
 
 bool HE853Controller::sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd)
@@ -437,6 +480,84 @@ bool HE853Controller::sendRfData_UK(uint16_t deviceCode, bool cmd)
 		&& sendOutputReport(rfCmdBuf+8)
 		&& sendOutputReport(rfCmdBuf+16)
 		&& sendOutputReport(rfCmdBuf+24);
+}
+
+bool HE853Controller::sendUKNew(uint16_t deviceId, bool command)
+{
+	uint8_t data[3];
+	int8_t i = 0;
+	uint16_t buf[8];
+
+	for (i = 0; i < 8; i++) {
+		buf[i] = deviceCode % 3;
+		deviceCode /= 3;
+
+		switch (buf[i]) {
+			case 0:
+				buf[i] = 0;
+				break;
+			case 1:
+				buf[i] = 3;
+				break;
+		case 2:
+                		buf[i] = 1;
+		                break;
+		}
+	}
+
+	uint16_t addr = 0;
+	for (i = 7; i >= 0; i--) {
+		addr = (uint16_t) ((addr << 2) | buf[i]);
+	}
+
+	uint8_t sbuf = 0x14;
+	if (cmd == true)
+		sbuf |= 0x01;
+
+	data[0] = (uint8_t) (addr >> 8);
+	data[1] = (uint8_t) addr;
+	data[2] = sbuf;
+
+	sendRfData(&UKTimings, data, sizeof(data));
+}
+
+bool HE853Controller::sendKaku(uint16_t deviceId, bool command);
+{
+	uint8_t data[3];
+	int8_t i = 0;
+	uint16_t buf[8];
+
+	for (i = 0; i < 8; i++) {
+		buf[i] = deviceCode % 3;
+		deviceCode /= 3;
+
+		switch (buf[i]) {
+			case 0:
+				buf[i] = 0;
+				break;
+			case 1:
+				buf[i] = 3;
+				break;
+			case 2:
+				buf[i] = 1;
+				break;
+		}
+	}
+
+	uint16_t addr = 0;
+	for (i = 7; i >= 0; i--) {
+		addr = (uint16_t) ((addr << 2) | buf[i]);
+	}
+
+	uint8_t sbuf = 0x14;
+	if (cmd == true)
+		sbuf |= 0x01;
+
+	data[0] = (uint8_t) (addr >> 8);
+	data[1] = (uint8_t) addr;
+	data[2] = sbuf;
+
+	sendRfData(&KakuTimings, data, sizeof(data));
 }
 
 bool HE853Controller::execRfCommand()

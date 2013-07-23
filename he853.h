@@ -23,7 +23,7 @@ GER    260            1300           57            7           (??6Frame)
 #include "hidapi.h" // http://www.signal11.us/oss/hidapi/
 
 #define RUN_DRY 0
-#define DEBUG   0
+#define DEBUG   1
 
 struct He853Timings {
 	char* 		ProtocolName; // static char just to display
@@ -65,6 +65,8 @@ public:
 	bool sendUK(uint16_t deviceId, bool command);
 	bool sendEU(uint16_t deviceId, bool command);
 	bool sendAll(uint16_t deviceId, uint8_t command);
+	bool sendUKNew(uint16_t deviceId, bool command);
+	bool sendKaku(uint16_t deviceId, bool command);
 };
 
 #endif
