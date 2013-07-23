@@ -48,7 +48,10 @@ bool HE853Controller::sendOutputReports(uint8_t* buf, uint16_t nReports)
 		int rv;
 
 		for (uint16_t i=0; i <  nReports; i++) {
-			rv = hid_write(handle, buf + i * 9, 9);
+#ifdef DEBUG
+		printf("Report %d report %02X first byte %02X\n", i, buf[i*9], buf[i*9+1]);
+#endif
+			rv = hid_write(handle, buf + (i * 9), 9);
 		}
 		return (bool) rv;
 }
@@ -92,26 +95,26 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 		// EndBit_LTime
 		rfCmdBuf[0*8+1+7] = MicroToTicksMSB(t->EndBitLowTime);
 
-	rfCmdBuf[1*8+0 + 0] = 0x0;  // report id = 0, as it seems to be the only report
-	rfCmdBuf[1*8+1 + 0] = 0x2; // index
+	rfCmdBuf[1*9+0 + 0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[1*9+1 + 0] = 0x2; // index
 
 		// EndBit_LTime
-		rfCmdBuf[1*8+1+1] = MicroToTicksLSB(t->EndBitLowTime);
+		rfCmdBuf[1*9+1+1] = MicroToTicksLSB(t->EndBitLowTime);
 		// DataBit0_HTime
-		rfCmdBuf[1*8+1+2] = MicroToTicks(t->DataBit0HighTime);
+		rfCmdBuf[1*9+1+2] = MicroToTicks(t->DataBit0HighTime);
 		// DataBit0_LTime
-		rfCmdBuf[1*8+1+3] = MicroToTicks(t->DataBit0LowTime);
+		rfCmdBuf[1*9+1+3] = MicroToTicks(t->DataBit0LowTime);
 		// DataBit1_HTime
-		rfCmdBuf[1*8+1+4] = MicroToTicks(t->DataBit1HighTime);
+		rfCmdBuf[1*9+1+4] = MicroToTicks(t->DataBit1HighTime);
 		// DataBit1_LTime
-		rfCmdBuf[1*8+1+5] = MicroToTicks(t->DataBit1LowTime);
+		rfCmdBuf[1*9+1+5] = MicroToTicks(t->DataBit1LowTime);
 		// DataBit_Count
-		rfCmdBuf[1*8+1+6] = t->DataBitCount;
+		rfCmdBuf[1*9+1+6] = t->DataBitCount;
 		// Frame_Count
-		rfCmdBuf[1*8+1+7] = t->FrameCount;
+		rfCmdBuf[1*9+1+7] = t->FrameCount;
 
-	rfCmdBuf[2*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
-	rfCmdBuf[2*8+1+0] = 0x03;
+	rfCmdBuf[2*9+0+0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[2*9+1+0] = 0x03;
 #ifdef DEBUG
 	printf("Protocol %s dataBytes %d %d\n", t->ProtocolName, nDataBytes, t->DataBitCount);
 #endif
@@ -119,11 +122,11 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 #ifdef DEBUG
 		printf("%02X ", data[i]);
 #endif
-		rfCmdBuf[2*8+1+1 + i] = data[i];
+		rfCmdBuf[2*9+1+1 + i] = data[i];
 	}
 
-	rfCmdBuf[3*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
-	rfCmdBuf[3*8+1+0] = 0x04;
+	rfCmdBuf[3*9+0+0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[3*9+1+0] = 0x04;
 
 #ifdef DEBUG
 		printf("\n");
@@ -132,11 +135,11 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 #ifdef DEBUG
 		printf("%02X ", data[i]);
 #endif
-		rfCmdBuf[3*8+1+1 + i-7] = data[i];
+		rfCmdBuf[3*9+1+1 + i-7] = data[i];
 	}
 
-	rfCmdBuf[4*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
-	rfCmdBuf[4*8+1+0] = 0x05; // Exec 'command'
+	rfCmdBuf[4*9+0+0] = 0x0;  // report id = 0, as it seems to be the only report
+	rfCmdBuf[4*9+1+0] = 0x05; // Exec 'command'
 
 #ifdef DEBUG
 	printf("\nsendToStick\n");
@@ -178,12 +181,12 @@ static struct He853Timings GERTimings = {
 #define KAKU_T            350  // us
 static struct He853Timings KakuTimings = {
 	"KAKU",
-	KAKU_T, 31* KAKU_T,
-	0,0,
-	3*KAKU_T, KAKU_T,
+	0, 0,
+	KAKU_T,32*KAKU_T,
 	KAKU_T, 3*KAKU_T,
+	3*KAKU_T, KAKU_T,
 	24,
-	18
+	7
 };
 
 
@@ -553,9 +556,10 @@ bool HE853Controller::sendKaku(uint16_t deviceCode, bool cmd)
 	if (cmd == true)
 		sbuf |= 0x01;
 
-	data[0] = (uint8_t) (addr >> 8);
-	data[1] = (uint8_t) addr;
-	data[2] = sbuf;
+	// C3 ON
+	data[0] = 0b00010000;
+	data[1] = 0b00010000;
+	data[2] = 0b00010101;
 
 	sendRfData(&KakuTimings, data, sizeof(data));
 }
