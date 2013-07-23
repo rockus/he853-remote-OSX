@@ -584,14 +584,14 @@ bool HE853Controller::sendKakuNew(uint16_t deviceCode, bool cmd)
 	uint8_t data[8];
 
 	// C3 ON
-	data[0] = 0b01010101;
-	data[1] = 0b10101001;
-	data[2] = 0b10010110;
-	data[3] = 0b10101001;
-	data[4] = 0b10010101;
-	data[5] = 0b01011010;
-	data[6] = 0b10010110;
-	data[7] = 0b01011001;
+	data[0] = 0x55; // 0b01010101;
+	data[1] = 0xA9; // b10101001;
+	data[2] = 0x96; // 0b10010110;
+	data[3] = 0xA9; // 0b10101001;
+	data[4] = 0x95; // 0b10010110;
+	data[5] = 0x5A; // 0b01011010;
+	data[6] = 0x96; // 0b10010110;
+	data[7] = 0x55; // 0b01011001;
 
 	sendRfData(&KakuNewTimings, data, sizeof(data));
 }
