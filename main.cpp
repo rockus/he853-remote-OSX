@@ -22,5 +22,7 @@ int main(int argc, char **argv)
 	printf("Sending Kakucommand[%i] to deviceId[%i]\n", command, deviceId);
 	remote->sendKaku((uint16_t)deviceId, (uint8_t)command);
 
+	printf("Sending Kakucommand New[%i] to deviceId[%i]\n", command, deviceId);
+	remote->sendKakuNew((uint16_t)deviceId, (uint8_t)command);
 	return 0;
 }

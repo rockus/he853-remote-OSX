@@ -67,6 +67,7 @@ public:
 	bool sendAll(uint16_t deviceId, uint8_t command);
 	bool sendUKNew(uint16_t deviceId, bool command);
 	bool sendKaku(uint16_t deviceId, bool command);
+	bool sendKakuNew(uint16_t deviceId, bool command);
 };
 
 #endif

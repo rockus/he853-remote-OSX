@@ -178,6 +178,20 @@ static struct He853Timings GERTimings = {
 	7
 };
 
+
+/*********************************************************************************************\
+* Deze routine berekent de RAW pulsen uit een CMD_KAKU plaatst deze in de buffer RawSignal
+*
+* KAKU
+* Encoding volgens Princeton PT2262 / MOSDESIGN M3EB / Domia Lite spec.
+* Pulse (T) is 350us PWDM
+* 0 = T,3T,T,3T, 1 = T,3T,3T,T, short 0 = T,3T,T,T
+*
+* KAKU ondersteund:
+*   on/off       ---- 000x Off/On
+*   all on/off   ---- 001x AllOff/AllOn // is group (unit code bestaat uit short 0s)
+\*********************************************************************************************/
+
 #define KAKU_T            350  // us
 static struct He853Timings KakuTimings = {
 	"KAKU",
@@ -187,6 +201,35 @@ static struct He853Timings KakuTimings = {
 	3*KAKU_T, KAKU_T,
 	24,
 	7
+};
+
+
+/*********************************************************************************************\
+* NewKAKU
+* Encoding volgens Arduino Home Easy pagina
+* Pulse (T) is 275us PDM
+* 0 = T,T,T,4T, 1 = T,4T,T,T, dim = T,T,T,T op bit 27
+*
+* NewKAKU ondersteund:
+*   on/off       ---- 000x Off/On
+*   all on/off   ---- 001x AllOff/AllOn
+*   dim absolute xxxx 0110 Dim16        // dim op bit 27 + 4 extra bits voor dim level
+*
+*  NewKAKU (org.)        = AAAAAAAAAAAAAAAAAAAAAAAAAACCUUUU(LLLL) -> A=KAKU_adres, C=commando, U=KAKU-Unit, L=extra dimlevel bits (optioneel)
+*  Bit                   = 01234567890123456789012345678901 2345  -> Bit-0 gaat als eerste door de ether.
+*                                    1111111111222222222233 3333
+*
+\*********************************************************************************************/
+#define KAKUNew_T                   275        // us
+
+static struct He853Timings KakuNewTimings = {
+	"KAKUNEW",
+	KAKUNew_T, 8*KAKUNew_T,
+	KAKUNew_T,32*KAKUNew_T,
+	KAKUNew_T, KAKUNew_T, //0 = 01, Dim = 00
+	KAKUNew_T, 4*KAKUNew_T, // 1 = 10
+	64,
+	18
 };
 
 
@@ -527,34 +570,6 @@ bool HE853Controller::sendUKNew(uint16_t deviceCode, bool cmd)
 bool HE853Controller::sendKaku(uint16_t deviceCode, bool cmd)
 {
 	uint8_t data[3];
-	int8_t i = 0;
-	uint16_t buf[8];
-
-	for (i = 0; i < 8; i++) {
-		buf[i] = deviceCode % 3;
-		deviceCode /= 3;
-
-		switch (buf[i]) {
-			case 0:
-				buf[i] = 0;
-				break;
-			case 1:
-				buf[i] = 3;
-				break;
-			case 2:
-				buf[i] = 1;
-				break;
-		}
-	}
-
-	uint16_t addr = 0;
-	for (i = 7; i >= 0; i--) {
-		addr = (uint16_t) ((addr << 2) | buf[i]);
-	}
-
-	uint8_t sbuf = 0x14;
-	if (cmd == true)
-		sbuf |= 0x01;
 
 	// C3 ON
 	data[0] = 0b00010000;
@@ -563,6 +578,24 @@ bool HE853Controller::sendKaku(uint16_t deviceCode, bool cmd)
 
 	sendRfData(&KakuTimings, data, sizeof(data));
 }
+
+bool HE853Controller::sendKakuNew(uint16_t deviceCode, bool cmd)
+{
+	uint8_t data[8];
+
+	// C3 ON
+	data[0] = 0b01010101;
+	data[1] = 0b10101001;
+	data[2] = 0b10010110;
+	data[3] = 0b10101001;
+	data[4] = 0b10010101;
+	data[5] = 0b01011010;
+	data[6] = 0b10010110;
+	data[7] = 0b01011001;
+
+	sendRfData(&KakuNewTimings, data, sizeof(data));
+}
+
 
 bool HE853Controller::execRfCommand()
 {
