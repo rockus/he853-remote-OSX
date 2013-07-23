@@ -156,7 +156,7 @@ static struct He853Timings AnBanTimings = {
 } ;
 
 static struct He853Timings UKTimings = {
-	"UK"
+	"UK",
 	320, 9700,
 	0,0,
 	320, 960,
@@ -166,18 +166,18 @@ static struct He853Timings UKTimings = {
 };
 
 static struct He853Timings GERTimings = {
-	"GER"
+	"GER",
 	260, 8600,
 	0, 0,
-	260, 260
-	260, 1300
+	260, 260,
+	260, 1300,
 	57,
 	7
 };
 
 #define KAKU_T            350  // us
 static struct He853Timings KakuTimings = {
-	"KAKU"
+	"KAKU",
 	KAKU_T, 31* KAKU_T,
 	0,0,
 	3*KAKU_T, KAKU_T,
@@ -482,7 +482,7 @@ bool HE853Controller::sendRfData_UK(uint16_t deviceCode, bool cmd)
 		&& sendOutputReport(rfCmdBuf+24);
 }
 
-bool HE853Controller::sendUKNew(uint16_t deviceId, bool command)
+bool HE853Controller::sendUKNew(uint16_t deviceCode, bool cmd)
 {
 	uint8_t data[3];
 	int8_t i = 0;
@@ -521,7 +521,7 @@ bool HE853Controller::sendUKNew(uint16_t deviceId, bool command)
 	sendRfData(&UKTimings, data, sizeof(data));
 }
 
-bool HE853Controller::sendKaku(uint16_t deviceId, bool command);
+bool HE853Controller::sendKaku(uint16_t deviceCode, bool cmd)
 {
 	uint8_t data[3];
 	int8_t i = 0;
