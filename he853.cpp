@@ -83,6 +83,7 @@ bool HE853Controller::readDeviceStatus()
 #else
 	return true;
 #endif
+#endif
 }
 
 
