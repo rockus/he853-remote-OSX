@@ -621,20 +621,32 @@ bool HE853Controller::getDeviceStatus(void)
 
 bool HE853Controller::sendAnBan(uint16_t deviceId, uint8_t command)
 {
+#ifdef RKR_STRUCT
+	return sendRfData_AnBan(deviceId, command);
+#else
 	return sendRfData_AnBan(deviceId, command) &&
 		execRfCommand();
+#endif
 }
 
 bool HE853Controller::sendUK(uint16_t deviceId, bool command)
 {
+#ifdef RKR_STRUCT
+	return sendRfData_UK(deviceId, command)
+#else
 	return sendRfData_UK(deviceId, command) &&
 		execRfCommand();
+#endif
 }
 
 bool HE853Controller::sendEU(uint16_t deviceId, bool command)
 {
+#ifdef RKR_STRUCT
+	return sendRfData_GER(deviceId, command);
+#else
 	return sendRfData_GER(deviceId, command) &&
 		execRfCommand();
+#endif
 }
 
 bool HE853Controller::sendAll(uint16_t deviceId, uint8_t command)
