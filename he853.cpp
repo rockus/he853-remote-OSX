@@ -604,6 +604,7 @@ bool HE853Controller::sendKakuNew(uint16_t deviceCode, bool cmd)
 }
 
 
+#ifndef RKR_STRUCT
 bool HE853Controller::execRfCommand()
 {
 	// execute command
@@ -613,6 +614,7 @@ bool HE853Controller::execRfCommand()
 	// send rf command + execute command
 	return sendOutputReport(execCmdBuf);
 }
+#endif
 
 bool HE853Controller::getDeviceStatus(void)
 {
