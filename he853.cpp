@@ -374,6 +374,7 @@ bool HE853Controller::sendRfData_GER(uint16_t deviceCode, bool cmd)
 	uint8_t data[8];
 #else
 	uint8_t rfCmdBuf[32];
+#endif
 	int i = 0;
 
 	uint8_t tb_fx[16] = { 0x07, 0x0b, 0x0d, 0x0e,
@@ -473,6 +474,7 @@ bool HE853Controller::sendRfData_GER(uint16_t deviceCode, bool cmd)
 		&& sendOutputReport(rfCmdBuf+8)
 		&& sendOutputReport(rfCmdBuf+16)
 		&& sendOutputReport(rfCmdBuf+24);
+#endif
 }
 
 bool HE853Controller::sendRfData_UK(uint16_t deviceCode, bool cmd)
