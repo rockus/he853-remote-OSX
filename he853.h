@@ -24,6 +24,13 @@ GER    260            1300           57            7           (??6Frame)
 
 #define RUN_DRY 0
 #define DEBUG   1
+#define RKR_STRUCT 1 // use new sendRfData
+
+#ifdef DEBUG
+# define DEBUG_PRINTF(x) printf x
+#else
+# define DEBUG_PRINTF(x) do {} while (0)
+#endif
 
 struct He853Timings {
 	char* 		ProtocolName; // static char just to display
@@ -51,23 +58,28 @@ public:
 
 private:
 	bool sendOutputReports(uint8_t* buf, uint16_t nReports);
+#ifndef RKR_STRUCT
 	bool sendOutputReport(uint8_t* buf);
+#endif
 	bool readDeviceStatus();
 	bool sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBytes);
 	bool sendRfData_AnBan(uint16_t deviceCode, uint8_t cmd);
 	bool sendRfData_GER(uint16_t deviceCode, bool cmd);
 	bool sendRfData_UK(uint16_t deviceCode, bool cmd);
+#ifndef RKR_STRUCT
 	bool execRfCommand();
-
+#endif
 public:
 	bool getDeviceStatus(void);
 	bool sendAnBan(uint16_t deviceId, uint8_t command);
 	bool sendUK(uint16_t deviceId, bool command);
 	bool sendEU(uint16_t deviceId, bool command);
 	bool sendAll(uint16_t deviceId, uint8_t command);
-	bool sendUKNew(uint16_t deviceId, bool command);
+//	bool sendUKNew(uint16_t deviceId, bool command);
+#ifdef RKR_STRUCT
 	bool sendKaku(uint16_t deviceId, bool command);
 	bool sendKakuNew(uint16_t deviceId, bool command);
+#endif
 };
 
 #endif
