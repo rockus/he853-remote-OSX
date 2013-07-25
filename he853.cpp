@@ -58,6 +58,7 @@ bool HE853Controller::sendOutputReports(uint8_t* buf, uint16_t nReports)
 
 bool HE853Controller::readDeviceStatus()
 {
+#ifndef RKR_STRUCT
 	uint8_t buf[8];
 	if (!m_initialized) return false;
 
@@ -69,9 +70,21 @@ bool HE853Controller::readDeviceStatus()
 #else
 	return true;
 #endif
+#else
+	uint8_t buf[9];
+	if (!m_initialized) return false;
+
+	memset(buf, 0x00, sizeof(buf));
+	buf[0] = 0x00; // report id = 0, as it seems to be the only report
+	buf[1] = 0x06;
+	buf[2] = 0x01;
+#if RUN_DRY == 0
+	return sendOutputReports(buf, 1);
+#else
+	return true;
+#endif
 }
 
-#ifdef RKR_STRUCT
 
 #define MicroToTicks(x) (uint8_t) (((x) / 10) & 0xFF)
 #define MicroToTicksMSB(x) (uint8_t) ((((x) / 10) >> 8) & 0xFF)
