@@ -34,6 +34,7 @@ GER    260            1300           57            7           (??6Frame)
 
 struct He853Timings {
 	char* 		ProtocolName; // static char just to display
+	uint16_t	BaseTime; // T, following Time fields are multiplied by BaseTime to form resulting times in microsecs... use 1 if you don't want mappings
 	uint16_t	StartBitHighTime;
 	uint16_t	StartBitLowTime;
 	uint16_t	EndBitHighTime;

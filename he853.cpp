@@ -86,10 +86,11 @@ bool HE853Controller::readDeviceStatus()
 #endif
 }
 
+#define MicroToTicksHe853(t,x) ((((t)->BaseTime) * ((t)->x)) / 10)
+#define MicroToTicksMSB(t, x) (uint8_t) ((MicroToTicksHe853(t,x) >> 8) & 0xFF)
+#define MicroToTicksLSB(t, x) (uint8_t) (MicroToTicksHe853(t,x) & 0xFF)
+#define MicroToTicks(t, x) MicroToTicksLSB(t, x)
 
-#define MicroToTicks(x) (uint8_t) (((x) / 10) & 0xFF)
-#define MicroToTicksMSB(x) (uint8_t) ((((x) / 10) >> 8) & 0xFF)
-#define MicroToTicksLSB(x) (uint8_t) (((x) / 10) & 0xFF)
 bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBytes) {
 	uint8_t rfCmdBuf[32 + 4 + 9]; // rename to output report cmdbuf + execute
 	uint8_t i = 0;
@@ -99,30 +100,30 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 	rfCmdBuf[0*8+0+0] = 0x0;  // report id = 0, as it seems to be the only report
 	rfCmdBuf[0*8+1+0] = 0x01; // index
 		// StartBit_HTime
-		rfCmdBuf[0*8+1+1] = MicroToTicksMSB(t->StartBitHighTime);
-		rfCmdBuf[0*8+1+2] = MicroToTicksLSB(t->StartBitHighTime);
+		rfCmdBuf[0*8+1+1] = MicroToTicksMSB(t,StartBitHighTime);
+		rfCmdBuf[0*8+1+2] = MicroToTicksLSB(t,StartBitHighTime);
 		// StartBit_LTime
-		rfCmdBuf[0*8+1+3] = MicroToTicksMSB(t->StartBitLowTime);
-		rfCmdBuf[0*8+1+4] = MicroToTicksLSB(t->StartBitLowTime);
+		rfCmdBuf[0*8+1+3] = MicroToTicksMSB(t,StartBitLowTime);
+		rfCmdBuf[0*8+1+4] = MicroToTicksLSB(t,StartBitLowTime);
 		// EndBit_HTime
-		rfCmdBuf[0*8+1+5] = MicroToTicksMSB(t->EndBitHighTime);
-		rfCmdBuf[0*8+1+6] = MicroToTicksLSB(t->EndBitHighTime);
+		rfCmdBuf[0*8+1+5] = MicroToTicksMSB(t,EndBitHighTime);
+		rfCmdBuf[0*8+1+6] = MicroToTicksLSB(t,EndBitHighTime);
 		// EndBit_LTime
-		rfCmdBuf[0*8+1+7] = MicroToTicksMSB(t->EndBitLowTime);
+		rfCmdBuf[0*8+1+7] = MicroToTicksMSB(t,EndBitLowTime);
 
 	rfCmdBuf[1*9+0 + 0] = 0x0;  // report id = 0, as it seems to be the only report
 	rfCmdBuf[1*9+1 + 0] = 0x2; // index
 
 		// EndBit_LTime
-		rfCmdBuf[1*9+1+1] = MicroToTicksLSB(t->EndBitLowTime);
+		rfCmdBuf[1*9+1+1] = MicroToTicksLSB(t,EndBitLowTime);
 		// DataBit0_HTime
-		rfCmdBuf[1*9+1+2] = MicroToTicks(t->DataBit0HighTime);
+		rfCmdBuf[1*9+1+2] = MicroToTicks(t,DataBit0HighTime);
 		// DataBit0_LTime
-		rfCmdBuf[1*9+1+3] = MicroToTicks(t->DataBit0LowTime);
+		rfCmdBuf[1*9+1+3] = MicroToTicks(t,DataBit0LowTime);
 		// DataBit1_HTime
-		rfCmdBuf[1*9+1+4] = MicroToTicks(t->DataBit1HighTime);
+		rfCmdBuf[1*9+1+4] = MicroToTicks(t,DataBit1HighTime);
 		// DataBit1_LTime
-		rfCmdBuf[1*9+1+5] = MicroToTicks(t->DataBit1LowTime);
+		rfCmdBuf[1*9+1+5] = MicroToTicks(t,DataBit1LowTime);
 		// DataBit_Count
 		rfCmdBuf[1*9+1+6] = t->DataBitCount;
 		// Frame_Count
@@ -155,6 +156,7 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 
 static struct He853Timings AnBanTimings = {
 	"AnBan",
+	1, // no T
 	320, 4800,
 	0, 0,
 	320, 960,
@@ -165,6 +167,7 @@ static struct He853Timings AnBanTimings = {
 
 static struct He853Timings UKTimings = {
 	"UK",
+	1, // no T
 	320, 9700,
 	0,0,
 	320, 960,
@@ -175,6 +178,7 @@ static struct He853Timings UKTimings = {
 
 static struct He853Timings GERTimings = {
 	"GER",
+	1, // no T
 	260, 8600,
 	0, 0,
 	260, 260,
@@ -197,13 +201,13 @@ static struct He853Timings GERTimings = {
 *   all on/off   ---- 001x AllOff/AllOn // is group (unit code bestaat uit short 0s)
 \*********************************************************************************************/
 
-#define KAKU_T            350  // us
 static struct He853Timings KakuTimings = {
 	"KAKU",
+	350, // Base Time us
 	0, 0,
-	KAKU_T,32*KAKU_T,
-	KAKU_T, 3*KAKU_T,
-	3*KAKU_T, KAKU_T,
+	1,32,
+	1, 3,
+	3, 1,
 	24,
 	7
 };
@@ -225,14 +229,14 @@ static struct He853Timings KakuTimings = {
 *                                    1111111111222222222233 3333
 *
 \*********************************************************************************************/
-#define KAKUNew_T                   275        // us
 
 static struct He853Timings KakuNewTimings = {
 	"KAKUNEW",
-	KAKUNew_T, 8*KAKUNew_T,
-	KAKUNew_T,32*KAKUNew_T,
-	KAKUNew_T, KAKUNew_T, //0 = 01, Dim = 00
-	KAKUNew_T, 4*KAKUNew_T, // 1 = 10
+	275, // Base time in us
+	1, 8,
+	1,32,
+	1, 1, //0 = 01, Dim = 00
+	1, 4, // 1 = 10
 	64,
 	18
 };
