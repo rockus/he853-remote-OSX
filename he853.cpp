@@ -638,7 +638,7 @@ bool HE853Controller::sendAnBan(uint16_t deviceId, uint8_t command)
 bool HE853Controller::sendUK(uint16_t deviceId, bool command)
 {
 #ifdef RKR_STRUCT
-	return sendRfData_UK(deviceId, command)
+	return sendRfData_UK(deviceId, command);
 #else
 	return sendRfData_UK(deviceId, command) &&
 		execRfCommand();
