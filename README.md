@@ -17,31 +17,41 @@ the [HE853 Control Project](http://he853control.sourceforge.net/).
 
 # Build
 
-This version is not reliant on libusb anymore, but rather uses hidapi together with the OSX USB backends.
+This version is not reliant on libusb anymore, but rather uses [hidapi](https://github.com/signal11/hidapi) together with the OSX USB backends.
 Therefore, first clone hidapi:
 
+```
   git clone http://github.com/signal11/hidapi
+```
 
 Copy the following files from the hidapi (sub-)directories into this directory here:
 
+```
   hidapi/hidapi.h
   mac/hid.c
+```
 
 You can then build the CLI application by simply running
 
+```
   make
- 
+```
+
 # Usage
 
 You do **not** have to be root to execute the program.
 
+```
   ./he853 deviceId command
+```
 
 The command is either a *0* for *OFF* or anything *>0* for *ON*.
 To program the power socket you have to place the power socket into learning 
 mode and send the *ON* command to it:
 
+```
   ./he853 2001 1
+```
 
 After that you can use the deviceId *2001* for toggling the power socket.
 
