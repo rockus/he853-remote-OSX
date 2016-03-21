@@ -4,7 +4,7 @@ The he853-remote.OSX project provides a CLI application for the
 [HomeEasy HE853 433.92MHz USB RF remote control sender](http://www.elro.eu/en/produkte/cat/home-automation/home-easy-next/sender2/fernbedienbarer-pc-usb-dongle).
 The sender is used for toggling RF controlled power sockets.
 
-# Source and Original Work
+## Source and Original Work
 
 This code is based on work from
 [rinie](https://github.com/rinie) and [r10r](https://github.com/r10r).
@@ -31,13 +31,13 @@ You can then build the CLI application by simply running
 
   make
  
-## Usage
+# Usage
 
-You do not have to be root to execute the program.
+You do **not** have to be root to execute the program.
 
   ./he853 <deviceId> <command>
 
-The command is either a *0* for *OFF* or anything > 0 for *ON*.
+The command is either a *0* for *OFF* or anything *>0* for *ON*.
 To program the power socket you have to place the power socket into learning 
 mode and send the *ON* command to it:
 
@@ -49,7 +49,3 @@ After that you can use the deviceId *2001* for toggling the power socket.
 
 * [hidapi](https://github.com/signal11/hidapi)
 * **no** libusb
-
-# Known Issues
-
-* ~~doesn't~~ compile**s** on OSX
