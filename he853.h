@@ -2,7 +2,6 @@
 #define HE853_H__
 
 /* Timings
-
 FName StartBit_HTime StartBit_LTime EndBit_HTime EndBit_LTime DataBit0_HTime DataBit0_LTime
 AnBan  320            4800           0            0            320            960
 UK     320            9700           0            0            320            960
@@ -14,7 +13,13 @@ AnBan  960            320            28            7           (??6Frame)??3?1??
 UK     960            320            24            18          (??16Frame)
 GER    260            1300           57            7           (??6Frame)
 
+Remarks in Chinese from
+http://developer.telldus.se/ticket/320:
+AnBan: (Recommendation 6Frame) Kangtai 3-in-1 wireless protocol standard V1.2
+UK: (Recommendation 16Frame)
+GER: (Recommendation 6Frame)
 */
+
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
@@ -23,7 +28,7 @@ GER    260            1300           57            7           (??6Frame)
 #include "hidapi.h" // http://www.signal11.us/oss/hidapi/
 
 #define RUN_DRY 0
-#define DEBUG   1
+// #define DEBUG
 #define RKR_STRUCT 1 // use new sendRfData
 
 #ifdef DEBUG

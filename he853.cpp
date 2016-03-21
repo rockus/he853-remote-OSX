@@ -131,7 +131,7 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 
 	rfCmdBuf[2*9+0+0] = 0x0;  // report id = 0, as it seems to be the only report
 	rfCmdBuf[2*9+1+0] = 0x03;
-	DEBUG_PRINTF(("Protocol %s dataBytes %d %d\n", t->ProtocolName, nDataBytes, t->DataBitCount));
+	DEBUG_PRINTF(("Protocol %s, %d Bytes, %d Bits:\n", t->ProtocolName, nDataBytes, t->DataBitCount));
 	for (; i< nDataBytes && i < 7; i++) {
 		DEBUG_PRINTF(("%02X ", data[i]));
 		rfCmdBuf[2*9+1+1 + i] = data[i];
@@ -399,6 +399,8 @@ bool HE853Controller::sendRfData_GER(uint16_t deviceCode, bool cmd)
 	if (cmd == true)
 		buf[3] |= 0x10;
 
+DEBUG_PRINTF(("buf: %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3]));
+
 	uint8_t gbuf[8] = { (uint8_t) (buf[0] >> 4),
  			    (uint8_t) (buf[0] & 15),
 			    (uint8_t) (buf[1] >> 4),
@@ -408,11 +410,15 @@ bool HE853Controller::sendRfData_GER(uint16_t deviceCode, bool cmd)
 			    (uint8_t) (buf[3] >> 4),
 			    (uint8_t) (buf[3] & 15) };
 
+DEBUG_PRINTF(("gbuf: %2x %2x %2x %2x %2x %2x %2x %2x\n", gbuf[0], gbuf[1], gbuf[2], gbuf[3], gbuf[4], gbuf[5], gbuf[6], gbuf[7]));
+
 	uint8_t kbuf[8];
 	for (i = 0; i < 8; i++) {
 		kbuf[i] = (uint8_t) ((tb_fx[gbuf[i]] | 0x40) & 0x7f);
 	}
 	kbuf[0] |= 0x80;
+
+DEBUG_PRINTF(("kbuf: %02x %02x %02x %02x %02x %02x %02x %02x\n", kbuf[0], kbuf[1], kbuf[2], kbuf[3], kbuf[4], kbuf[5], kbuf[6], kbuf[7]));
 
 	uint64_t t64 = 0;
 	t64 = kbuf[0];
@@ -603,7 +609,7 @@ bool HE853Controller::sendKakuNew(uint16_t deviceCode, bool cmd)
 
 	// C3 ON
 	data[0] = 0x55; // 0b01010101;
-	data[1] = 0xA9; // b10101001;
+	data[1] = 0xA9; // 0b10101001;
 	data[2] = 0x96; // 0b10010110;
 	data[3] = 0xA9; // 0b10101001;
 	data[4] = 0x95; // 0b10010110;
