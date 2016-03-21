@@ -154,8 +154,9 @@ bool HE853Controller::sendRfData(He853Timings *t, uint8_t* data, uint8_t nDataBy
 	return sendOutputReports(rfCmdBuf, 5);
 }
 
+const char cAnBan[] = "AnBan";
 static struct He853Timings AnBanTimings = {
-	"AnBan",
+	(char *)&cAnBan,
 	1, // no T
 	320, 4800,
 	0, 0,
@@ -165,8 +166,9 @@ static struct He853Timings AnBanTimings = {
 	7
 } ;
 
+const char cUK[] = "UK";
 static struct He853Timings UKTimings = {
-	"UK",
+	(char *)&cUK,
 	1, // no T
 	320, 9700,
 	0,0,
@@ -176,8 +178,9 @@ static struct He853Timings UKTimings = {
 	18
 };
 
+const char cGER[] = "GER";
 static struct He853Timings GERTimings = {
-	"GER",
+	(char *)&cGER,
 	1, // no T
 	260, 8600,
 	0, 0,
@@ -201,8 +204,9 @@ static struct He853Timings GERTimings = {
 *   all on/off   ---- 001x AllOff/AllOn // is group (unit code bestaat uit short 0s)
 \*********************************************************************************************/
 
+const char cKAKU[] = "KAKU";
 static struct He853Timings KakuTimings = {
-	"KAKU",
+	(char *)&cKAKU,
 	350, // Base Time us
 	0, 0,
 	1,32,
@@ -230,8 +234,9 @@ static struct He853Timings KakuTimings = {
 *
 \*********************************************************************************************/
 
+const char cKAKUNEW[] = "KAKUNEW";
 static struct He853Timings KakuNewTimings = {
-	"KAKUNEW",
+	(char *)&cKAKUNEW,
 	275, // Base time in us
 	1, 8,
 	1,32,
@@ -588,6 +593,8 @@ bool HE853Controller::sendKaku(uint16_t deviceCode, bool cmd)
 	data[2] = 0b00010101;
 
 	sendRfData(&KakuTimings, data, sizeof(data));
+
+	return true;
 }
 
 bool HE853Controller::sendKakuNew(uint16_t deviceCode, bool cmd)
@@ -605,6 +612,8 @@ bool HE853Controller::sendKakuNew(uint16_t deviceCode, bool cmd)
 	data[7] = 0x55; // 0b01011001;
 
 	sendRfData(&KakuNewTimings, data, sizeof(data));
+
+	return true;
 }
 
 

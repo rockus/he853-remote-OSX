@@ -1,10 +1,11 @@
-all: he853
+LIBS = -lstdc++ -framework IOKIT -framework CoreFoundation
+CC = gcc
 
-hid-libusb.o: hid-libusb.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(shell pkg-config --cflags libusb-1.0) -c $< -o $@
+SOURCE = main.cpp he853.cpp hid.c
+EXEC = he853
 
-he853: main.o he853.o hid-libusb.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $+ -o $@ -lusb-1.0 -lpthread
+all:
+	$(CC) $(SOURCE) $(LIBS) -o $(EXEC) -Wall
 
 clean:
-	$(RM) *.o he853
+	rm -rf *.o *~ $(EXEC) 
