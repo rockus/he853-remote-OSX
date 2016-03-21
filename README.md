@@ -35,7 +35,7 @@ You can then build the CLI application by simply running
 
 You do **not** have to be root to execute the program.
 
-  ./he853 <deviceId> <command>
+  ./he853 deviceId command
 
 The command is either a *0* for *OFF* or anything *>0* for *ON*.
 To program the power socket you have to place the power socket into learning 
